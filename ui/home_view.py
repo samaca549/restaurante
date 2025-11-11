@@ -24,6 +24,8 @@ class HomeView(ttk.Frame):
                    command=lambda: controller.show_frame("InventarioView")).pack(**btn_style)
         ttk.Button(f_main, text="Ver Finanzas", 
                    command=lambda: controller.show_frame("FinanzasView")).pack(**btn_style)
+        ttk.Button(f_main, text="Ver Historial_pedidos", 
+                   command=lambda: controller.show_frame("HistorialPedidosView")).pack(**btn_style)
         
         # Este botón es solo para gerentes
         self.btn_admin = ttk.Button(f_main, text="Administrar Empleados", 

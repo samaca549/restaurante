@@ -12,6 +12,7 @@ from presentation.finanzas_vm import FinanzasViewModel
 from presentation.pedidos_vm import PedidosViewModel
 from presentation.inventario_vm import InventarioViewModel
 from presentation.empleados_vm import EmpleadosViewModel
+from presentation.historial_vm import HistorialPedidosViewModel
 
 
 def main():
@@ -41,12 +42,12 @@ def main():
     # Inicialización con dependencias:
     login_vm = LoginViewModel(auth_service)
     
-    # 🚨 FIX PRINCIPAL: FinanzasViewModel ahora recibe sus dos dependencias: Firestore y Gemini (ia_service)
+#FIX PRINCIPAL: FinanzasViewModel ahora recibe sus dos dependencias: Firestore y Gemini (ia_service)
     finanzas_vm = FinanzasViewModel(
         firestore_service=firestore_service, 
         gemini_service=ia_service
     )
-    
+    historial_vm= HistorialPedidosViewModel(firestore_service)
     pedidos_vm = PedidosViewModel(firestore_service, ia_service)
     inventario_vm = InventarioViewModel(firestore_service)
     empleados_vm = EmpleadosViewModel(auth_service)
@@ -58,6 +59,7 @@ def main():
         "pedidos_vm": pedidos_vm,
         "inventario_vm": inventario_vm,
         "empleados_vm": empleados_vm,
+        "historial_vm": historial_vm
     }
     
     # --- 3. Inicialización y Ejecución de la UI ---

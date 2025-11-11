@@ -9,6 +9,7 @@ from ui.pedidos_view import PedidosView
 from ui.inventario_view import InventarioView
 from ui.empleados_view import EmpleadosView
 from ui.finanzas_view import FinanzasView
+from ui.historial_view import HistorialPedidosView
 # (Puedes añadir una vista de IA si quieres)
 
 class AppUI(tk.Tk):
@@ -32,7 +33,7 @@ class AppUI(tk.Tk):
         self.frames = {}
 
         # Vistas a cargar
-        vistas = (LoginView, HomeView, PedidosView, InventarioView, EmpleadosView, FinanzasView)
+        vistas = (LoginView, HomeView, PedidosView, InventarioView, EmpleadosView, FinanzasView, HistorialPedidosView)
 
         for F in vistas:
             frame_name = F.__name__

@@ -77,3 +77,31 @@ class FirestoreService:
         _, doc_ref = self.inventario_col.add(nuevo_item.to_dict())
         print(f"Nuevo ítem de inventario creado con ID: {doc_ref.id}")
         # No devolvemos el objeto, solo confirmamos la acción.
+    # ... (dentro de tu clase FirestoreService) ...
+
+    def get_all_pedidos_with_ids(self) -> List[dict]:
+        """Obtiene todos los pedidos, incluyendo su ID de documento."""
+        pedidos = []
+        for doc in self.pedidos_col.stream():
+            data = doc.to_dict()
+            data["id"] = doc.id  # <-- Importante: añadimos el ID
+            pedidos.append(data)
+        # Ordenar por fecha, más nuevos primero
+        pedidos.sort(key=lambda p: p.get("fecha_creacion", 0), reverse=True)
+        return pedidos
+
+    def delete_pedido(self, pedido_id: str) -> None:
+        """Elimina un pedido por su ID."""
+        try:
+            self.pedidos_col.document(pedido_id).delete()
+            print(f"Pedido {pedido_id} eliminado.")
+            
+            # NOTA (para un siguiente paso):
+            # Esto elimina el pedido, pero no lo quita del
+            # 'historial_pedidos' del Cliente.
+            # Para eso, necesitarías buscar al cliente y
+            # usar firestore.ArrayRemove([pedido_id])
+            
+        except Exception as e:
+            print(f"Error al eliminar pedido {pedido_id}: {e}")
+            raise  # Relanzar la excepción para que el VM la maneje
