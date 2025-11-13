@@ -95,7 +95,7 @@ class FinanzasView(ttk.Frame):
         self.vm.mensaje.value = "Consultando a Gemini (esto puede tardar unos segundos)..."
         self.entry_prompt.delete(0, tk.END) # Limpiar el campo
         
-        # 🚨 Llama al nuevo método en el ViewModel
+        #  Llama al nuevo método en el ViewModel
         self.vm.ask_gemini_question(prompt)
         self.txt_response.config(state='normal')
         self.txt_response.delete(1.0, tk.END)
