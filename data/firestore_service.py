@@ -76,8 +76,7 @@ class FirestoreService:
         
         _, doc_ref = self.inventario_col.add(nuevo_item.to_dict())
         print(f"Nuevo ítem de inventario creado con ID: {doc_ref.id}")
-        # No devolvemos el objeto, solo confirmamos la acción.
-    # ... (dentro de tu clase FirestoreService) ...
+
 
     def get_all_pedidos_with_ids(self) -> List[dict]:
         """Obtiene todos los pedidos, incluyendo su ID de documento."""
