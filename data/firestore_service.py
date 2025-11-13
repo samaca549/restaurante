@@ -51,7 +51,7 @@ class FirestoreService:
     def add_pedido_to_cliente(self, cliente_id: str, pedido_id: str):
         """Agrega un ID de pedido al historial del cliente."""
         cliente_ref = self.clientes_col.document(cliente_id)
-        # firestore.ArrayUnion se asegura de no duplicar el ID
+
         from google.cloud.firestore_v1.field_path import FieldPath
         from google.cloud import firestore
         cliente_ref.update({"historial_pedidos": firestore.ArrayUnion([pedido_id])})
