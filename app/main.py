@@ -17,8 +17,7 @@ from presentation.historial_vm import HistorialPedidosViewModel
 
 def main():
     # --- 1. Inicialización de Servicios ---
-    
-    # Inicializa Firebase Admin SDK (para acceder a la DB y Auth)
+
     try:
         init_firebase()
     except Exception as e:
@@ -26,10 +25,8 @@ def main():
         print(f"Error fatal al inicializar Firebase: {e}")
         return
 
-    # Obtener clientes de Firebase (dummy o reales)
     db_firestore_client, auth_admin_client = get_firebase_clients()
 
-    # Inicializar servicios base
     firestore_service = FirestoreService(db_firestore_client, auth_admin_client)
     auth_service = AuthService(auth_admin_client)
     
@@ -39,10 +36,10 @@ def main():
 
     # --- 2. Inicialización de ViewModels ---
     
-    # Inicialización con dependencias:
+    # Inicialización 
     login_vm = LoginViewModel(auth_service)
     
-#FIX PRINCIPAL: FinanzasViewModel ahora recibe sus dos dependencias: Firestore y Gemini (ia_service)
+
     finanzas_vm = FinanzasViewModel(
         firestore_service=firestore_service, 
         gemini_service=ia_service
