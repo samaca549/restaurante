@@ -96,11 +96,7 @@ class FirestoreService:
             self.pedidos_col.document(pedido_id).delete()
             print(f"Pedido {pedido_id} eliminado.")
             
-            # NOTA (para un siguiente paso):
-            # Esto elimina el pedido, pero no lo quita del
-            # 'historial_pedidos' del Cliente.
-            # Para eso, necesitarías buscar al cliente y
-            # usar firestore.ArrayRemove([pedido_id])
+
             
         except Exception as e:
             print(f"Error al eliminar pedido {pedido_id}: {e}")
