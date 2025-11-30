@@ -1,37 +1,41 @@
 from dataclasses import dataclass, field
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
-# Usamos dataclasses para modelos de datos simples
 @dataclass
 class Plato:
-    id: str
+    id: Optional[str] # <--- Arreglado: Puede ser texto o None
     nombre: str
     precio: float
-    # Qué insumos y cuánto gasta este plato
-    insumos: Dict[str, float] = field(default_factory=dict) # ej: {"harina": 0.5, "queso": 0.2}
+    descripcion: str = ""
+    insumos: Dict[str, float] = field(default_factory=dict)
+    imagen_path: Optional[str] = None
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any], doc_id: str):
         return cls(
             id=doc_id,
             nombre=data.get("nombre", "N/A"),
-            precio=data.get("precio", 0.0),
-            insumos=data.get("insumos", {})
+            precio=float(data.get("precio", 0.0)),
+            descripcion=data.get("descripcion", ""),
+            insumos=data.get("insumos", {}),
+            imagen_path=data.get("imagen_path", None)
         )
 
     def to_dict(self):
         return {
             "nombre": self.nombre,
             "precio": self.precio,
-            "insumos": self.insumos
+            "descripcion": self.descripcion,
+            "insumos": self.insumos,
+            "imagen_path": self.imagen_path
         }
 
 @dataclass
 class Cliente:
-    id: str
+    id: Optional[str] # <--- Arreglado
     nombre: str
     email: str
-    historial_pedidos: List[str] = field(default_factory=list) # Lista de IDs de Pedidos
+    historial_pedidos: List[str] = field(default_factory=list)
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any], doc_id: str):
@@ -50,10 +54,33 @@ class Cliente:
         }
 
 @dataclass
+class InventarioItem:
+    id: Optional[str] # <--- Arreglado
+    nombre: str
+    cantidad: float
+    unidad: str 
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any], doc_id: str):
+        return cls(
+            id=doc_id,
+            nombre=data.get("nombre", "N/A"),
+            cantidad=float(data.get("cantidad", 0.0)),
+            unidad=data.get("unidad", "unidad")
+        )
+
+    def to_dict(self):
+        return {
+            "nombre": self.nombre,
+            "cantidad": self.cantidad,
+            "unidad": self.unidad
+        }
+
+@dataclass
 class Empleado:
     uid: str
     email: str
-    rol: str  # 'gerente' o 'mesero'
+    rol: str 
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any], uid: str):
@@ -67,27 +94,4 @@ class Empleado:
         return {
             "email": self.email,
             "rol": self.rol
-        }
-
-@dataclass
-class InventarioItem:
-    id: str
-    nombre: str
-    cantidad: float
-    unidad: str # "kg", "litros", "unidades"
-
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any], doc_id: str):
-        return cls(
-            id=doc_id,
-            nombre=data.get("nombre", "N/A"),
-            cantidad=data.get("cantidad", 0.0),
-            unidad=data.get("unidad", "N/A")
-        )
-
-    def to_dict(self):
-        return {
-            "nombre": self.nombre,
-            "cantidad": self.cantidad,
-            "unidad": self.unidad
         }

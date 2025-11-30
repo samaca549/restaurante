@@ -1,98 +1,127 @@
-import os
 import requests
 import json
-from domain.models import Empleado
-from firebase_admin import firestore
+import os
+from firebase_admin import auth, firestore
+from dotenv import load_dotenv
+
+load_dotenv()
+FIREBASE_WEB_API_KEY = os.getenv("FIREBASE_WEB_API_KEY")
 
 class AuthService:
-    """
-    Maneja el login (REST API) y la creación de usuarios (Admin SDK).
-    Ya no requiere db_client en el constructor.
-    """
-    def __init__(self, auth_admin_client):
-        self.auth_admin = auth_admin_client
-        
-        # Firestore desde firebase_admin
-        self.db = firestore.client()
-        self.users_col = self.db.collection("empleados")
-        
-        # WEB API KEY
-        self.web_api_key = os.environ.get("FIREBASE_WEB_API_KEY")
-        if not self.web_api_key:
-            raise ValueError("FIREBASE_WEB_API_KEY no encontrada en .env")
+    def __init__(self, db_firestore_client):
+        """
+        Recibe el cliente de Firestore para leer/escribir roles.
+        """
+        self.db = db_firestore_client
+        self.current_user = None 
 
-        # Opcionales pero recomendables
-        self.auth_domain = os.environ.get("FIREBASE_AUTH_DOMAIN")
-        self.project_id = os.environ.get("FIREBASE_PROJECT_ID")
+    def login(self, email, password):
+        if not FIREBASE_WEB_API_KEY:
+            raise Exception("Falta FIREBASE_WEB_API_KEY en .env")
 
-        self.rest_api_url = (
-            f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={self.web_api_key}"
-        )
-
-    def login(self, email, password) -> Empleado:
-        payload = json.dumps({
-            "email": email,
-            "password": password,
-            "returnSecureToken": True
-        })
-
-        origin_header = (
-            f"https://{self.auth_domain}" if self.auth_domain else "http://localhost"
-        )
-
-        headers = {
-            "Content-Type": "application/json",
-            "Referer": origin_header,
-        }
+        # 1. Validar contraseña con Google
+        request_url = f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={FIREBASE_WEB_API_KEY}"
+        headers = {"Content-Type": "application/json"}
+        payload = {"email": email, "password": password, "returnSecureToken": True}
 
         try:
-            print(f"Autenticando {email} vía REST API...")
-            response = requests.post(self.rest_api_url, data=payload, headers=headers)
-            response.raise_for_status()
-
+            response = requests.post(request_url, headers=headers, data=json.dumps(payload))
             data = response.json()
-            uid = data["localId"]
-            print(f"Login REST exitoso. UID: {uid}. Consultando rol...")
 
-            empleado_data = self.get_empleado_doc(uid)
-            if empleado_data:
-                return Empleado.from_dict(empleado_data, uid)
-            raise Exception(f"Usuario {uid} sin rol en Firestore")
+            if "error" in data:
+                msg = data["error"]["message"]
+                if "INVALID_PASSWORD" in msg or "EMAIL_NOT_FOUND" in msg:
+                    raise Exception("Credenciales incorrectas.")
+                raise Exception(f"Error login: {msg}")
 
-        except requests.exceptions.HTTPError as err:
-            error_json = err.response.json()
-            error_msg = error_json.get("error", {}).get("message", "Error desconocido")
-            raise Exception(f"Error de login: {error_msg}")
+            # Datos básicos
+            local_id = data["localId"] # UID de Auth
+            id_token = data["idToken"]
+
+            # 2. OBTENER ROL DESDE FIRESTORE (Tu colección 'empleados')
+            rol = 'mesero' # Default
+            
+            if self.db:
+                print(f"DEBUG: Buscando en Firestore email: {email}")
+                # Buscamos el documento donde el campo 'email' coincida
+                users_ref = self.db.collection('empleados')
+                query = users_ref.where('email', '==', email).limit(1).stream()
+                
+                encontrado = False
+                for doc in query:
+                    user_data = doc.to_dict()
+                    rol = user_data.get('rol', 'mesero')
+                    print(f"DEBUG: ¡Encontrado! Rol en BD es: {rol}")
+                    encontrado = True
+                
+                if not encontrado:
+                    print("DEBUG: Usuario autenticado, pero no existe en la colección 'empleados'.")
+            
+            # 3. Guardar sesión en memoria
+            self.current_user = {
+                "uid": local_id,
+                "email": email,
+                "rol": rol,
+                "token": id_token
+            }
+            return self.current_user
+
         except Exception as e:
             raise e
 
-    def get_empleado_doc(self, uid: str) -> dict:
-        print(f"Consultando Firestore UID: {uid} en 'empleados'...")
+    def logout(self):
+        self.current_user = None
+
+    # --- GESTIÓN DE EMPLEADOS (CRUD) ---
+
+    def create_user(self, email, password, rol):
+        """Crea en Auth (Login) Y guarda en Firestore para que el login funcione."""
         try:
-            doc = self.users_col.document(uid).get()
-            if doc.exists:
-                print("Rol encontrado:", doc.to_dict().get("rol"))
-                return doc.to_dict()
-            print("Documento NO encontrado")
-            return None
+            # 1. Crear en Auth (para autenticación)
+            user = auth.create_user(email=email, password=password)
+            
+            # 2. Guardar en Firestore (Datos y Rol)
+            if self.db:
+                self.db.collection('empleados').add({
+                    'email': email,
+                    'rol': rol,
+                    'uid_auth': user.uid # Guardamos referencia al UID de Auth
+                })
+            
+            return user
         except Exception as e:
-            print("Error consultando Firestore:", e)
-            return None
+            raise Exception(f"Error creando usuario: {e}")
 
-    def create_user(self, email, password, rol) -> Empleado:
+    def get_all_users_firestore(self):
+        """Trae la lista desde Firestore (donde están los roles)."""
+        if not self.db: return []
+        
+        lista = []
+        docs = self.db.collection('empleados').stream()
+        for doc in docs:
+            data = doc.to_dict()
+            # Añadimos el ID del documento por si necesitamos editar/borrar
+            data['doc_id'] = doc.id 
+            lista.append(data)
+        return lista
+
+    def delete_user(self, uid: str):
+        """Elimina el usuario de Auth Y su documento en Firestore."""
         try:
-            print(f"Creando usuario {email} (rol {rol})...")
-            user_record = self.auth_admin.create_user(
-                email=email,
-                password=password
-            )
-            uid = user_record.uid
-            print(f"Usuario creado UID={uid}. Guardando rol en Firestore...")
-
-            empleado = Empleado(uid=uid, email=email, rol=rol)
-            self.users_col.document(uid).set(empleado.to_dict())
-
-            return empleado
+            # 1. Eliminar de Auth (si uid es el UID de Auth)
+            auth.delete_user(uid)
+            
+            # 2. Eliminar de Firestore (buscando por 'uid_auth' == uid)
+            if self.db:
+                users_ref = self.db.collection('empleados')
+                query = users_ref.where('uid_auth', '==', uid).limit(1).stream()
+                
+                for doc in query:
+                    doc.reference.delete()
+                    print(f"DEBUG: Documento eliminado en Firestore: {doc.id}")
+                    return  # Salimos si encontramos y eliminamos
+                
+                print("DEBUG: No se encontró documento en Firestore para eliminar.")
+            
         except Exception as e:
-            print("Error al crear usuario:", e)
-            raise e
+            raise Exception(f"Error eliminando usuario: {e}")

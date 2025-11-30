@@ -1,121 +1,286 @@
 import tkinter as tk
-from tkinter import ttk, scrolledtext
-from typing import Any, Dict
+from tkinter import ttk, scrolledtext, messagebox
+import threading
+import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
+# ======================================================
+# COMPONENTE 1: TARJETA DE MÉTRICA (KPI CARD)
+# ======================================================
+class MetricCard(tk.Frame):
+    def __init__(self, parent, title, icon, value="...", subtext="Actualizado", bg_color="#FFFFFF", text_color="#333"):
+        super().__init__(parent, bg=bg_color, bd=0, highlightthickness=1, highlightbackground="#E0E0E0", relief="flat")
+        self.pack_propagate(False)
+        
+        self.inner = tk.Frame(self, bg=bg_color)
+        self.inner.pack(padx=2, pady=2, fill="both", expand=True)
+        
+        f_top = tk.Frame(self.inner, bg=bg_color)
+        f_top.pack(fill="x", padx=15, pady=(15, 5))
+        
+        tk.Label(f_top, text=icon, font=("Segoe UI Emoji", 18), bg=bg_color, fg=text_color).pack(side="left")
+        tk.Label(f_top, text=title.upper(), font=("Segoe UI", 9, "bold"), bg=bg_color, fg="#757575").pack(side="left", padx=10)
+        
+        self.lbl_value = tk.Label(self.inner, text=value, font=("Segoe UI", 24, "bold"), bg=bg_color, fg=text_color)
+        self.lbl_value.pack(anchor="w", padx=15)
+        
+        self.lbl_sub = tk.Label(self.inner, text=subtext, font=("Segoe UI", 8), bg=bg_color, fg="#9E9E9E")
+        self.lbl_sub.pack(anchor="w", padx=15, pady=(0, 15))
+        
+        self.bind("<Enter>", lambda e: self.config(highlightbackground="#BDBDBD"))
+        self.bind("<Leave>", lambda e: self.config(highlightbackground="#E0E0E0"))
+
+    def set_value(self, value):
+        self.lbl_value.config(text=str(value))
+
+# ======================================================
+# COMPONENTE 2: WIDGET DE INSIGHT IA
+# ======================================================
+class InsightWidget(tk.Frame):
+    def __init__(self, parent):
+        super().__init__(parent, bg="#311B92", bd=0, relief="flat")
+        
+        f_in = tk.Frame(self, bg="#311B92")
+        f_in.pack(fill="both", expand=True, padx=20, pady=15)
+        
+        f_head = tk.Frame(f_in, bg="#311B92")
+        f_head.pack(fill="x")
+        tk.Label(f_head, text="🧠 IA STRATEGIC INSIGHT", fg="#B388FF", bg="#311B92", font=("Segoe UI", 9, "bold")).pack(side="left")
+        
+        self.lbl_icon = tk.Label(f_in, text="💡", font=("Segoe UI Emoji", 28), bg="#311B92", fg="white")
+        self.lbl_icon.pack(side="left", padx=(0, 15))
+        
+        self.lbl_text = tk.Label(f_in, text="Analizando patrones de venta...", 
+                                 font=("Segoe UI", 14, "italic"), bg="#311B92", fg="white", 
+                                 wraplength=600, justify="left", anchor="w")
+        self.lbl_text.pack(side="left", fill="both", expand=True)
+
+    def update_insight(self, tipo, texto):
+        iconos = {
+            "ALERTA": "⚠️", "EXITO": "🚀",
+            "CONSEJO": "💡", "INFO": "ℹ️", "TENDENCIA": "📈"
+        }
+        icono = iconos.get(str(tipo).upper(), "✨")
+        self.lbl_icon.config(text=icono)
+        self.lbl_text.config(text=str(texto))
+        self.lbl_text.config(fg="#311B92") 
+        self.after(100, lambda: self.lbl_text.config(fg="white"))
+
+# ======================================================
+# VISTA PRINCIPAL - FINANZAS VIEW
+# ======================================================
 class FinanzasView(ttk.Frame):
     def __init__(self, parent, controller):
         super().__init__(parent)
         self.controller = controller
         self.vm = controller.get_vm("finanzas_vm")
-
-        ttk.Label(self, text="Panel de Finanzas y Análisis", font=("Segoe UI", 20, "bold")).pack(pady=10)
         
-        f_nav = ttk.Frame(self)
-        f_nav.pack(fill="x", padx=10)
-        ttk.Button(f_nav, text="< Volver al Menú", 
-                   command=lambda: controller.show_frame("HomeView")).pack(side="left")
-
-        # Usamos un Notebook (pestañas) para separar las secciones
-        self.notebook = ttk.Notebook(self)
-        self.notebook.pack(pady=10, padx=10, fill="both", expand=True)
-
-        # --- Pestaña 1: Reporte Financiero Clásico ---
-        self.f_reporte_clasico = ttk.Frame(self.notebook, padding="10")
-        self.notebook.add(self.f_reporte_clasico, text="Reporte Financiero")
-        self._setup_reporte_clasico(self.f_reporte_clasico)
-
-        # --- Pestaña 2: Herramienta de Análisis de IA ---
-        self.f_analisis_ia = ttk.Frame(self.notebook, padding="10")
-        self.notebook.add(self.f_analisis_ia, text="Análisis de IA (Gemini)")
-        self._setup_analisis_ia(self.f_analisis_ia)
-
-        # Suscribir ViewModels
-        self.vm.reporte_finanzas.subscribe(self._update_reporte_clasico)
-        self.vm.mensaje.subscribe(lambda m: self.msg_label.config(text=m))
-        self.vm.gemini_respuesta.subscribe(self._update_gemini_response)
-
-
-    def _setup_reporte_clasico(self, parent_frame):
-        """Configura la UI del reporte financiero tradicional."""
+        style = ttk.Style()
+        style.theme_use("clam")
+        style.configure("Bg.TFrame", background="#F5F7FA")
+        self.configure(style="Bg.TFrame")
         
-        self.btn_generar = ttk.Button(parent_frame, text="Generar Reporte Financiero", command=self.vm.generar_reporte)
-        self.btn_generar.pack(pady=10)
+        # HEADER
+        f_header = tk.Frame(self, bg="white", height=60, bd=1, relief="flat", highlightthickness=1, highlightbackground="#E0E0E0")
+        f_header.pack(fill="x", side="top")
+        f_header.pack_propagate(False)
         
-        # Mostrar resultados del reporte
-        f_reporte = ttk.LabelFrame(parent_frame, text="Métricas Clave", padding=15)
-        f_reporte.pack(padx=10, pady=10, fill="x")
+        tk.Button(f_header, text="⬅ Volver", command=lambda: controller.show_frame("HomeView"),
+                  bg="white", bd=0, font=("Segoe UI", 10), cursor="hand2").pack(side="left", padx=10)
+        tk.Label(f_header, text="Dashboard Financiero", font=("Segoe UI", 16, "bold"), bg="white", fg="#263238").pack(side="left", padx=10)
+        
+        self.period_var = tk.StringVar(value="Mes Actual")
+        ttk.Combobox(f_header, textvariable=self.period_var, values=["Mes Actual", "Última Semana", "Año Completo"], state="readonly").pack(side="right", padx=10)
+        self.period_var.trace("w", lambda *args: self.vm.generar_reporte(self.period_var.get()))
 
-        self.reporte_labels = {}
-        row = 0
-        for key, desc in [("ingreso_bruto", "Ingreso Total"), 
-                          ("total_pedidos", "Total Pedidos"), 
-                          ("ingreso_promedio", "Ingreso Promedio por Pedido")]:
-            ttk.Label(f_reporte, text=f"{desc}:").grid(row=row, column=0, sticky="w", padx=5, pady=5)
-            lbl = ttk.Label(f_reporte, text="N/A", font=("Segoe UI", 12, "bold"))
-            lbl.grid(row=row, column=1, sticky="e", padx=5, pady=5)
-            self.reporte_labels[key] = lbl
-            row += 1
-            
-        self.msg_label = ttk.Label(parent_frame, text="")
-        self.msg_label.pack(pady=5)
+        # CONTENIDO
+        canvas = tk.Canvas(self, bg="#F5F7FA")
+        scrollbar = ttk.Scrollbar(self, orient="vertical", command=canvas.yview)
+        self.main_container = tk.Frame(canvas, bg="#F5F7FA")
+        
+        self.main_container.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+        canvas.create_window((0, 0), window=self.main_container, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+        
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+        
+        # 1. WIDGET IA
+        self.insight_widget = InsightWidget(self.main_container)
+        self.insight_widget.pack(fill="x", pady=(20, 20), padx=20)
+        
+        # 2. KPIS
+        f_kpi = tk.Frame(self.main_container, bg="#F5F7FA")
+        f_kpi.pack(fill="x", pady=(0, 20), padx=20)
+        for i in range(4): f_kpi.columnconfigure(i, weight=1)
+        
+        self.card_ingreso = MetricCard(f_kpi, "Ingresos Brutos", "💰")
+        self.card_ingreso.grid(row=0, column=0, sticky="ew", padx=10, pady=5)
+        self.card_neto = MetricCard(f_kpi, "Ganancia Neta", "📈", bg_color="#E8F5E9")
+        self.card_neto.grid(row=0, column=1, sticky="ew", padx=10, pady=5)
+        self.card_pedidos = MetricCard(f_kpi, "Total Pedidos", "🧾")
+        self.card_pedidos.grid(row=0, column=2, sticky="ew", padx=10, pady=5)
+        self.card_ticket = MetricCard(f_kpi, "Ticket Promedio", "📊")
+        self.card_ticket.grid(row=0, column=3, sticky="ew", padx=10, pady=5)
+        
+        # 3. GRÁFICOS
+        f_charts = tk.Frame(self.main_container, bg="#F5F7FA")
+        f_charts.pack(fill="x", pady=20, padx=20)
+        f_charts.columnconfigure(0, weight=3)
+        f_charts.columnconfigure(1, weight=2)
+        
+        # Línea (Area)
+        self.fig_line = Figure(figsize=(5, 4), dpi=100)
+        self.fig_line.patch.set_facecolor('#F5F7FA')
+        self.ax_line = self.fig_line.add_subplot(111)
+        
+        f_chart_line = tk.Frame(f_charts, bg="white", bd=1, relief="flat")
+        f_chart_line.grid(row=0, column=0, sticky="nsew", padx=10)
+        self.canvas_line = FigureCanvasTkAgg(self.fig_line, master=f_chart_line)
+        self.canvas_line.get_tk_widget().pack(fill="both", expand=True, padx=10, pady=10)
+        
+        # Pie (Donut)
+        self.fig_pie = Figure(figsize=(4, 4), dpi=100)
+        self.fig_pie.patch.set_facecolor('#F5F7FA')
+        self.ax_pie = self.fig_pie.add_subplot(111)
+        
+        f_chart_pie = tk.Frame(f_charts, bg="white", bd=1, relief="flat")
+        f_chart_pie.grid(row=0, column=1, sticky="nsew", padx=10)
+        self.canvas_pie = FigureCanvasTkAgg(self.fig_pie, master=f_chart_pie)
+        self.canvas_pie.get_tk_widget().pack(fill="both", expand=True, padx=10, pady=10)
 
-    def _setup_analisis_ia(self, parent_frame):
-        """Configura la UI para preguntas y respuestas a Gemini."""
+        # 4. TABLA
+        f_table = ttk.LabelFrame(self.main_container, text="Historial Reciente", padding=10)
+        f_table.pack(fill="x", pady=20, padx=20)
         
-        ttk.Label(parent_frame, text="Pregúntale a Gemini sobre tus datos de ventas o inventario:", font=("Segoe UI", 12)).pack(pady=5, anchor="w")
+        cols = ("Fecha", "ID", "Cliente", "Total", "Ganancia")
+        self.tree_trans = ttk.Treeview(f_table, columns=cols, show="headings", height=8)
+        for col in cols: self.tree_trans.heading(col, text=col)
+        self.tree_trans.column("ID", width=60)
+        self.tree_trans.pack(fill="both", expand=True)
+        
+        # 5. CHAT
+        f_chat = ttk.LabelFrame(self.main_container, text="Asistente IA", padding=10)
+        f_chat.pack(fill="x", pady=20, padx=20)
+        
+        self.txt_chat = scrolledtext.ScrolledText(f_chat, state='disabled', height=5, font=("Segoe UI", 10))
+        self.txt_chat.pack(fill="both", expand=True)
+        
+        f_input = tk.Frame(f_chat)
+        f_input.pack(fill="x", pady=5)
+        self.ent_prompt = ttk.Entry(f_input)
+        self.ent_prompt.pack(side="left", fill="x", expand=True, padx=(0, 5))
+        self.ent_prompt.bind("<Return>", lambda e: self.on_ask())
+        tk.Button(f_input, text="ENVIAR", command=self.on_ask, bg="#2196F3", fg="white", bd=0).pack(side="right")
 
-        # Campo de entrada para la pregunta
-        f_input = ttk.Frame(parent_frame)
-        f_input.pack(fill="x", pady=10)
+        # SUSCRIPCIONES (Wrappers seguros para Hilos)
+        self.vm.reporte_finanzas.subscribe(lambda d: self.after(0, lambda: self.update_kpis(d)))
+        self.vm.transacciones.subscribe(lambda d: self.after(0, lambda: self.update_transacciones(d)))
+        self.vm.graficos_data.subscribe(lambda d: self.after(0, lambda: self.update_graficos(d)))
+        self.vm.gemini_respuesta.subscribe(lambda d: self.after(0, lambda: self.update_chat(d)))
+        self.vm.insight_flash.subscribe(lambda d: self.after(0, lambda: self.update_insight_widget(d)))
         
-        self.entry_prompt = ttk.Entry(f_input, width=80)
-        self.entry_prompt.pack(side="left", fill="x", expand=True, padx=(0, 10))
-        
-        self.btn_ask = ttk.Button(f_input, text="Preguntar a Gemini", command=self.ask_gemini_query)
-        self.btn_ask.pack(side="right")
-        
-        # Área para la respuesta
-        ttk.Label(parent_frame, text="Respuesta de la IA:", font=("Segoe UI", 10, "bold")).pack(pady=(10, 5), anchor="w")
-        self.txt_response = scrolledtext.ScrolledText(parent_frame, wrap=tk.WORD, height=15, width=80, state='disabled')
-        self.txt_response.pack(fill="both", expand=True)
+        self.after(1000, self._ciclo_insights_automaticos)
 
     def on_show(self):
-        """Se llama al mostrar la vista."""
-        # Generar reporte automáticamente al entrar a la vista
-        self.vm.generar_reporte() 
-        # Si tienes algún estado de IA, podrías inicializarlo aquí también.
-    
-    def ask_gemini_query(self):
-        """Maneja la acción de enviar la pregunta a Gemini."""
-        prompt = self.entry_prompt.get().strip()
-        if not prompt:
-            self.vm.mensaje.value = "Por favor, ingresa una pregunta."
-            return
-        
-        self.vm.mensaje.value = "Consultando a Gemini (esto puede tardar unos segundos)..."
-        self.entry_prompt.delete(0, tk.END) # Limpiar el campo
-        
-        # 🚨 Llama al nuevo método en el ViewModel
-        self.vm.ask_gemini_question(prompt)
-        self.txt_response.config(state='normal')
-        self.txt_response.delete(1.0, tk.END)
-        self.txt_response.insert(tk.END, "Esperando respuesta...\n")
-        self.txt_response.config(state='disabled')
+        self.vm.generar_reporte_completo()
 
+    def _ciclo_insights_automaticos(self):
+        self.vm.obtener_insight_automatico()
+        self.after(60000, self._ciclo_insights_automaticos)
 
-    def _update_gemini_response(self, respuesta: str):
-        """Actualiza el área de texto con la respuesta de la IA."""
-        self.txt_response.config(state='normal')
-        self.txt_response.delete(1.0, tk.END)
-        self.txt_response.insert(tk.END, respuesta)
-        self.txt_response.config(state='disabled')
-        self.vm.mensaje.value = "Consulta de IA finalizada."
+    # --- UI UPDATE ---
+    def update_kpis(self, data):
+        if not data: return
+        try:
+            self.card_ingreso.set_value(f"${data.get('ingreso_bruto', 0):,.0f}")
+            self.card_neto.set_value(f"${data.get('ganancia_neta', 0):,.0f}")
+            self.card_pedidos.set_value(str(data.get('total_pedidos', 0)))
+            self.card_ticket.set_value(f"${data.get('ingreso_promedio', 0):,.0f}")
+        except: pass
 
+    def update_transacciones(self, transacciones):
+        for i in self.tree_trans.get_children(): self.tree_trans.delete(i)
+        if not transacciones: return
+        for trans in transacciones:
+            try:
+                self.tree_trans.insert("", "end", values=(
+                    trans.get("fecha", "-"), trans.get("pedido_id", "-"), trans.get("cliente", "-"),
+                    f"${trans.get('total', 0):,.0f}", f"${trans.get('ganancia', 0):,.0f}"
+                ))
+            except: pass
 
-    def _update_reporte_clasico(self, reporte: Dict[str, Any]):
-        """Actualiza las etiquetas del reporte financiero."""
-        if not reporte: return
-        
-        self.reporte_labels["ingreso_bruto"].config(text=f"${reporte.get('ingreso_bruto', 0.0):,.2f}")
-        self.reporte_labels["total_pedidos"].config(text=f"{reporte.get('total_pedidos', 0)}")
-        self.reporte_labels["ingreso_promedio"].config(text=f"${reporte.get('ingreso_promedio', 0.0):,.2f}")
+    def update_graficos(self, data):
+        if not data: return
+        try:
+            # 1. AREA CHART
+            fechas = data.get("tendencias_fechas", [])
+            ventas = data.get("tendencias_ventas", [])
+            self.ax_line.clear()
+            
+            if fechas and len(fechas) == len(ventas):
+                color = "#1976D2"
+                self.ax_line.plot(fechas, ventas, color=color, linewidth=2, marker='o', markersize=4)
+                self.ax_line.fill_between(fechas, ventas, color=color, alpha=0.1)
+                self.ax_line.set_title("Ventas Recientes", fontsize=10, fontweight='bold', color="#555")
+                self.ax_line.grid(True, linestyle='--', alpha=0.5)
+                self.ax_line.spines['top'].set_visible(False)
+                self.ax_line.spines['right'].set_visible(False)
+                self.ax_line.tick_params(axis='x', rotation=30, labelsize=8)
+            else:
+                self.ax_line.text(0.5, 0.5, "Sin datos", ha='center')
+            self.canvas_line.draw()
+            
+            # 2. DONUT CHART (CORREGIDO PARA EVITAR ERROR TUPLE)
+            productos = data.get("top_productos_nombres", [])
+            cantidades = data.get("top_productos_cant", [])
+            self.ax_pie.clear()
+            
+            if productos and len(productos) == len(cantidades):
+                colores = ["#42A5F5", "#66BB6A", "#FFA726", "#EF5350", "#AB47BC"]
+                
+                # ASIGNACIÓN SEGURA: Tomamos el objeto de retorno completo
+                # pie() devuelve (wedges, texts) O (wedges, texts, autotexts)
+                # Dependiendo de autopct. Aquí SIEMPRE devuelve 3 cosas porque autopct existe.
+                resultados = self.ax_pie.pie(
+                    cantidades, 
+                    autopct='%1.0f%%', 
+                    pctdistance=0.80,
+                    colors=colores,
+                    wedgeprops=dict(width=0.4, edgecolor='white')
+                )
+                
+                # Extraemos solo lo que necesitamos para la leyenda (wedges es el índice 0)
+                wedges = resultados[0]
+                
+                self.ax_pie.set_title("Top Productos", fontsize=10, fontweight='bold', color="#555")
+                self.ax_pie.legend(wedges, productos, loc="center left", bbox_to_anchor=(0.9, 0, 0.5, 1), frameon=False, fontsize=8)
+            else:
+                self.ax_pie.text(0.5, 0.5, "Sin datos", ha='center')
+            self.canvas_pie.draw()
+            
+        except Exception as e:
+            print(f"Error Gráficos: {e}")
+
+    def on_ask(self):
+        prompt = self.ent_prompt.get().strip()
+        if prompt:
+            self.txt_chat.config(state='normal')
+            self.txt_chat.insert(tk.END, f"Tú: {prompt}\n")
+            self.txt_chat.config(state='disabled')
+            self.vm.ask_gemini_question(prompt)
+            self.ent_prompt.delete(0, 'end')
+
+    def update_chat(self, msg):
+        self.txt_chat.config(state='normal')
+        self.txt_chat.insert(tk.END, f"IA: {msg}\n\n")
+        self.txt_chat.see(tk.END)
+        self.txt_chat.config(state='disabled')
+
+    def update_insight_widget(self, data):
+        if data:
+            try:
+                tipo, texto = data
+                self.insight_widget.update_insight(tipo, texto)
+            except: pass
