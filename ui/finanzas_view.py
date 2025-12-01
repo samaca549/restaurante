@@ -51,9 +51,10 @@ class InsightWidget(tk.Frame):
         self.lbl_icon = tk.Label(f_in, text="💡", font=("Segoe UI Emoji", 28), bg="#311B92", fg="white")
         self.lbl_icon.pack(side="left", padx=(0, 15))
         
+        # Ajustamos wraplength para responsividad
         self.lbl_text = tk.Label(f_in, text="Analizando patrones de venta...", 
                                  font=("Segoe UI", 14, "italic"), bg="#311B92", fg="white", 
-                                 wraplength=600, justify="left", anchor="w")
+                                 wraplength=900, justify="left", anchor="w")
         self.lbl_text.pack(side="left", fill="both", expand=True)
 
     def update_insight(self, tipo, texto):
@@ -81,7 +82,7 @@ class FinanzasView(ttk.Frame):
         style.configure("Bg.TFrame", background="#F5F7FA")
         self.configure(style="Bg.TFrame")
         
-        # HEADER
+        # --- HEADER (Fijo arriba) ---
         f_header = tk.Frame(self, bg="white", height=60, bd=1, relief="flat", highlightthickness=1, highlightbackground="#E0E0E0")
         f_header.pack(fill="x", side="top")
         f_header.pack_propagate(False)
@@ -94,17 +95,29 @@ class FinanzasView(ttk.Frame):
         ttk.Combobox(f_header, textvariable=self.period_var, values=["Mes Actual", "Última Semana", "Año Completo"], state="readonly").pack(side="right", padx=10)
         self.period_var.trace("w", lambda *args: self.vm.generar_reporte(self.period_var.get()))
 
-        # CONTENIDO
-        canvas = tk.Canvas(self, bg="#F5F7FA")
+        # --- SCROLLABLE CONTENT (RESPONSIVO - SIN HUECOS) ---
+        canvas = tk.Canvas(self, bg="#F5F7FA", borderwidth=0, highlightthickness=0)
         scrollbar = ttk.Scrollbar(self, orient="vertical", command=canvas.yview)
+        
         self.main_container = tk.Frame(canvas, bg="#F5F7FA")
         
+        # 1. Crear ventana en el canvas
+        self.canvas_window = canvas.create_window((0, 0), window=self.main_container, anchor="nw")
+
+        # 2. Configurar scrollregion al cambiar tamaño interno
         self.main_container.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
-        canvas.create_window((0, 0), window=self.main_container, anchor="nw")
-        canvas.configure(yscrollcommand=scrollbar.set)
+
+        # 3. TRUCO DE RESPONSIVIDAD: Ajustar el ancho de la ventana interna al ancho del canvas
+        def _configure_canvas(event):
+            canvas.itemconfig(self.canvas_window, width=event.width)
         
+        canvas.bind("<Configure>", _configure_canvas)
+
+        canvas.configure(yscrollcommand=scrollbar.set)
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
+        
+        # --- WIDGETS INTERNOS ---
         
         # 1. WIDGET IA
         self.insight_widget = InsightWidget(self.main_container)
@@ -113,6 +126,7 @@ class FinanzasView(ttk.Frame):
         # 2. KPIS
         f_kpi = tk.Frame(self.main_container, bg="#F5F7FA")
         f_kpi.pack(fill="x", pady=(0, 20), padx=20)
+        # Configurar grid weights para que las tarjetas se estiren y llenen el ancho
         for i in range(4): f_kpi.columnconfigure(i, weight=1)
         
         self.card_ingreso = MetricCard(f_kpi, "Ingresos Brutos", "💰")
@@ -127,7 +141,7 @@ class FinanzasView(ttk.Frame):
         # 3. GRÁFICOS
         f_charts = tk.Frame(self.main_container, bg="#F5F7FA")
         f_charts.pack(fill="x", pady=20, padx=20)
-        f_charts.columnconfigure(0, weight=3)
+        f_charts.columnconfigure(0, weight=3) # El de línea es un poco más ancho
         f_charts.columnconfigure(1, weight=2)
         
         # Línea (Area)
@@ -172,7 +186,13 @@ class FinanzasView(ttk.Frame):
         self.ent_prompt = ttk.Entry(f_input)
         self.ent_prompt.pack(side="left", fill="x", expand=True, padx=(0, 5))
         self.ent_prompt.bind("<Return>", lambda e: self.on_ask())
-        tk.Button(f_input, text="ENVIAR", command=self.on_ask, bg="#2196F3", fg="white", bd=0).pack(side="right")
+        
+        self.btn_send = tk.Button(f_input, text="ENVIAR", command=self.on_ask, bg="#2196F3", fg="white", bd=0)
+        self.btn_send.pack(side="right")
+        
+        # Etiqueta de estado para la IA
+        self.lbl_ia_status = tk.Label(f_input, text="", fg="#FF9800", font=("Segoe UI", 8, "italic"))
+        self.lbl_ia_status.pack(side="right", padx=5)
 
         # SUSCRIPCIONES (Wrappers seguros para Hilos)
         self.vm.reporte_finanzas.subscribe(lambda d: self.after(0, lambda: self.update_kpis(d)))
@@ -232,7 +252,7 @@ class FinanzasView(ttk.Frame):
                 self.ax_line.text(0.5, 0.5, "Sin datos", ha='center')
             self.canvas_line.draw()
             
-            # 2. DONUT CHART (CORREGIDO PARA EVITAR ERROR TUPLE)
+            # 2. DONUT CHART (ARREGLADO Y SEGURO)
             productos = data.get("top_productos_nombres", [])
             cantidades = data.get("top_productos_cant", [])
             self.ax_pie.clear()
@@ -240,9 +260,7 @@ class FinanzasView(ttk.Frame):
             if productos and len(productos) == len(cantidades):
                 colores = ["#42A5F5", "#66BB6A", "#FFA726", "#EF5350", "#AB47BC"]
                 
-                # ASIGNACIÓN SEGURA: Tomamos el objeto de retorno completo
-                # pie() devuelve (wedges, texts) O (wedges, texts, autotexts)
-                # Dependiendo de autopct. Aquí SIEMPRE devuelve 3 cosas porque autopct existe.
+                # CORRECCIÓN: Guardamos todo en 'resultados' para evitar errores del linter
                 resultados = self.ax_pie.pie(
                     cantidades, 
                     autopct='%1.0f%%', 
@@ -251,8 +269,14 @@ class FinanzasView(ttk.Frame):
                     wedgeprops=dict(width=0.4, edgecolor='white')
                 )
                 
-                # Extraemos solo lo que necesitamos para la leyenda (wedges es el índice 0)
+                # El primer elemento siempre son los 'wedges' para la leyenda
                 wedges = resultados[0]
+                
+                # Opcional: Cambiar color de textos de porcentaje si existen (indice 2)
+                if len(resultados) > 2:
+                    for text in resultados[2]:
+                        text.set_color('white')
+                        text.set_fontsize(9)
                 
                 self.ax_pie.set_title("Top Productos", fontsize=10, fontweight='bold', color="#555")
                 self.ax_pie.legend(wedges, productos, loc="center left", bbox_to_anchor=(0.9, 0, 0.5, 1), frameon=False, fontsize=8)
@@ -269,14 +293,23 @@ class FinanzasView(ttk.Frame):
             self.txt_chat.config(state='normal')
             self.txt_chat.insert(tk.END, f"Tú: {prompt}\n")
             self.txt_chat.config(state='disabled')
-            self.vm.ask_gemini_question(prompt)
             self.ent_prompt.delete(0, 'end')
+            
+            # Feedback visual
+            self.lbl_ia_status.config(text="IA pensando... 🧠")
+            self.btn_send.config(state="disabled")
+            
+            self.vm.ask_gemini_question(prompt)
 
     def update_chat(self, msg):
         self.txt_chat.config(state='normal')
         self.txt_chat.insert(tk.END, f"IA: {msg}\n\n")
         self.txt_chat.see(tk.END)
         self.txt_chat.config(state='disabled')
+        
+        # Quitar feedback
+        self.lbl_ia_status.config(text="")
+        self.btn_send.config(state="normal")
 
     def update_insight_widget(self, data):
         if data:

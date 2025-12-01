@@ -232,7 +232,7 @@ class PedidosView(ttk.Frame):
             if not ia_service: return
 
             # Llamada al método corregido en ia_service
-            consejo = ia_service.obtener_recomendacion_flash()
+            consejo = ia_service.obtener_consejo_productivo()
             
             if consejo:
                 self.after(0, lambda: self.promo_widget.actualizar_consejo(consejo))
@@ -256,6 +256,7 @@ class PedidosView(ttk.Frame):
     def render_menu(self, platos):
         for w in self.scroll_menu.scrollable_frame.winfo_children(): w.destroy()
         self.cards_map = {}
+        COLUMNS = 4 
         for i, plato in enumerate(platos):
             row, col = divmod(i, COLUMNS)
             card = PlatoCard(self.scroll_menu.scrollable_frame, plato, self.handle_card_click, self.handle_qty_change)
