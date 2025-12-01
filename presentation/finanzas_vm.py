@@ -10,7 +10,7 @@ class FinanzasViewModel:
         self.fs = firestore_service
         self.gemini = gemini_service
         
-        # --- Observables (Ahora coinciden con la Vista) ---
+        
         self.reporte_finanzas = Observable({}) 
         self.transacciones = Observable([])      # Faltaba este
         self.graficos_data = Observable({})      # Faltaba este
@@ -26,18 +26,18 @@ class FinanzasViewModel:
         
         def run_report():
             try:
-                # 1. Obtener pedidos (Simulado: filtrar por periodo si tuvieras la lógica)
+                
                 pedidos = self.fs.get_all_pedidos() 
                 
-                # --- A. CÁLCULO DE KPIs ---
+                
                 total_pedidos = len(pedidos)
                 ingreso_bruto = sum(p.get("total", 0.0) for p in pedidos)
                 
-                # Simulamos costos (ej: 60% del ingreso) y clientes únicos
+                
                 costos_totales = ingreso_bruto * 0.60 
                 ganancia_neta = ingreso_bruto - costos_totales
                 
-                # Extraer clientes únicos
+                
                 clientes_set = set(p.get("cliente", {}).get("nombre", "Anon") for p in pedidos)
                 clientes_unicos = len(clientes_set)
 
@@ -61,9 +61,9 @@ class FinanzasViewModel:
                 lista_transacciones = []
                 for p in pedidos[-50:]: # Últimos 50 para no saturar
                     total = p.get("total", 0)
-                    costo_estimado = total * 0.6 # Simulado
+                    costo_estimado = total * 0.6 
                     lista_transacciones.append({
-                        "fecha": p.get("fecha", "Hoy"), # Asegúrate que tu pedido tenga fecha
+                        "fecha": p.get("fecha", "Hoy"),
                         "pedido_id": str(p.get("id", "???"))[-6:], # ID corto
                         "cliente": p.get("cliente", {}).get("nombre", "General"),
                         "total": total,
@@ -72,10 +72,10 @@ class FinanzasViewModel:
                     })
                 
                 # --- C. DATOS PARA GRÁFICOS ---
-                # 1. Tendencia de Ventas (Agrupar por Fecha)
+       
                 ventas_por_fecha = defaultdict(float)
                 for p in pedidos:
-                    # Asumiendo que p["fecha"] es un string "YYYY-MM-DD..."
+                
                     fecha_raw = p.get("fecha", str(datetime.now().date()))
                     fecha_simple = fecha_raw.split(" ")[0] # Solo YYYY-MM-DD
                     ventas_por_fecha[fecha_simple] += p.get("total", 0)
