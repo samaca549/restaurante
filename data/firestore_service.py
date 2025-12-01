@@ -6,8 +6,7 @@ from google.cloud import firestore
 from google.cloud.firestore_v1.base_query import FieldFilter
 
 class FirestoreService:
-    # --- CORRECCIÓN AQUÍ: ---
-    # Debemos aceptar (self, firestore_client, auth_client)
+    
     def __init__(self, firestore_client, auth_client):
         self.db = firestore_client 
         self.auth = auth_client
