@@ -3,7 +3,7 @@ from data.firebase_auth_service import AuthService
 
 class EmpleadoDTO:
     def __init__(self, uid, email, rol):
-        self.uid = uid # Puede ser uid de Auth o ID del documento
+        self.uid = uid # Es el UID de Auth (y Doc ID)
         self.email = email
         self.rol = rol
 
@@ -15,16 +15,14 @@ class EmpleadosViewModel:
         self.error = Observable(None)
 
     def cargar_empleados(self):
-        """Carga desde Firestore para ver los roles correctos."""
         self.error.value = None
         try:
-            # Usamos el nuevo método que lee la colección
             lista_raw = self.auth_service.get_all_users_firestore()
             lista_mapeada = []
             
             for item in lista_raw:
-                # Ojo: item es un diccionario ahora
-                uid = item.get('uid_auth') or item.get('doc_id')
+                # Usamos doc_id (que ahora es el UID de Auth)
+                uid = item.get('doc_id') 
                 email = item.get('email', 'Sin email')
                 rol = item.get('rol', 'mesero')
                 
@@ -49,6 +47,22 @@ class EmpleadosViewModel:
             self.cargar_empleados()
         except Exception as e:
             self.error.value = f"Error: {e}"
+
+    def actualizar_empleado(self, uid: str, rol: str, password: str | None = None):
+        self.error.value = None
+        self.mensaje.value = None
+
+        if not uid:
+            self.error.value = "No se ha seleccionado un empleado (Falta UID)."
+            return
+
+        try:
+            # Llama al servicio, que ahora accede al documento directamente por UID
+            self.auth_service.update_user(uid, rol, password)
+            self.mensaje.value = "Empleado actualizado correctamente."
+            self.cargar_empleados()
+        except Exception as e:
+            self.error.value = f"Error al actualizar: {e}"
 
     def eliminar_empleado(self, uid: str):
         self.error.value = None
