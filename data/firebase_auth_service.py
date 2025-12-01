@@ -9,9 +9,6 @@ FIREBASE_WEB_API_KEY = os.getenv("FIREBASE_WEB_API_KEY")
 
 class AuthService:
     def __init__(self, db_firestore_client):
-        """
-        Recibe el cliente de Firestore para leer/escribir roles.
-        """
         self.db = db_firestore_client
         self.current_user = None 
 
@@ -19,7 +16,6 @@ class AuthService:
         if not FIREBASE_WEB_API_KEY:
             raise Exception("Falta FIREBASE_WEB_API_KEY en .env")
 
-        # 1. Validar contraseña con Google
         request_url = f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={FIREBASE_WEB_API_KEY}"
         headers = {"Content-Type": "application/json"}
         payload = {"email": email, "password": password, "returnSecureToken": True}
@@ -34,16 +30,12 @@ class AuthService:
                     raise Exception("Credenciales incorrectas.")
                 raise Exception(f"Error login: {msg}")
 
-            # Datos básicos
-            local_id = data["localId"] # UID de Auth
+            local_id = data["localId"]
             id_token = data["idToken"]
 
-            # 2. OBTENER ROL DESDE FIRESTORE 
-            rol = 'mesero' # Default
-            
+            # 2. OBTENER ROL DESDE FIRESTORE (Buscamos por email, no por UID aquí)
+            rol = 'mesero'
             if self.db:
-                print(f"DEBUG: Buscando en Firestore email: {email}")
-         
                 users_ref = self.db.collection('empleados')
                 query = users_ref.where('email', '==', email).limit(1).stream()
                 
@@ -51,13 +43,8 @@ class AuthService:
                 for doc in query:
                     user_data = doc.to_dict()
                     rol = user_data.get('rol', 'mesero')
-                    print(f"DEBUG: ¡Encontrado! Rol en BD es: {rol}")
                     encontrado = True
-                
-                if not encontrado:
-                    print("DEBUG: Usuario autenticado, pero no existe en la colección 'empleados'.")
             
-            # 3. Guardar sesión en memoria
             self.current_user = {
                 "uid": local_id,
                 "email": email,
@@ -72,26 +59,23 @@ class AuthService:
     def logout(self):
         self.current_user = None
 
-    # --- GESTIÓN DE EMPLEADOS (CRUD) ---
-
     def create_user(self, email, password, rol):
-        """Crea en Auth (Login) Y guarda en Firestore para que el login funcione."""
+        """Crea en Auth y guarda en Firestore usando el UID de Auth como ID del documento."""
         try:
-            # 1. Crear en Auth (para autenticación)
+            # 1. Crear en Auth
             user = auth.create_user(email=email, password=password)
             
-            # 2. Guardar en Firestore (Datos y Rol)
+            # 2. Guardar en Firestore (usando el UID de Auth como ID del Documento)
             if self.db:
-                self.db.collection('empleados').add({
+                self.db.collection('empleados').document(user.uid).set({ # <-- SET usando user.uid como ID
                     'email': email,
                     'rol': rol,
-                    'uid_auth': user.uid # Guardamos referencia al UID de Auth
                 })
             
             return user
         except Exception as e:
             raise Exception(f"Error creando usuario: {e}")
-
+            
     def get_all_users_firestore(self):
         """Trae la lista desde Firestore (donde están los roles)."""
         if not self.db: return []
@@ -100,28 +84,50 @@ class AuthService:
         docs = self.db.collection('empleados').stream()
         for doc in docs:
             data = doc.to_dict()
-            # Añadimos el ID del documento por si necesitamos editar/borrar
+            # Asumimos que el doc.id es el UID de Auth
             data['doc_id'] = doc.id 
+            data['uid_auth'] = doc.id 
             lista.append(data)
         return lista
+        # En data/firebase_auth_service.py, dentro de la clase AuthService:
 
+    
     def delete_user(self, uid: str):
         """Elimina el usuario de Auth Y su documento en Firestore."""
         try:
-            # 1. Eliminar de Auth (si uid es el UID de Auth)
+            # 1. Eliminar de Auth
             auth.delete_user(uid)
             
-            # 2. Eliminar de Firestore (buscando por 'uid_auth' == uid)
+            # 2. Eliminar de Firestore (Directamente por ID)
             if self.db:
-                users_ref = self.db.collection('empleados')
-                query = users_ref.where('uid_auth', '==', uid).limit(1).stream()
-                
-                for doc in query:
-                    doc.reference.delete()
-                    print(f"DEBUG: Documento eliminado en Firestore: {doc.id}")
-                    return  # Salimos si encontramos y eliminamos
-                
-                print("DEBUG: No se encontró documento en Firestore para eliminar.")
-            
+                self.db.collection('empleados').document(uid).delete()
+                print(f"DEBUG: Documento eliminado en Firestore: {uid}")
         except Exception as e:
             raise Exception(f"Error eliminando usuario: {e}")
+  
+
+    def update_user(self, uid: str, rol: str, password: str | None = None):
+      
+        print(f"DEBUG: Solicitud de update recibida. Password es: '{password}' (Tipo: {type(password)})")
+
+        # 1. Actualizar contraseña en Auth
+       
+        if password is not None and len(str(password).strip()) > 0:
+            print(f"DEBUG: Intentando cambiar contraseña a: {password}")
+            try:
+                auth.update_user(uid, password=password)
+                print(f"DEBUG:  Contraseña actualizada correctamente en Auth para {uid}")
+            except Exception as auth_e:
+                print(f"DEBUG:  Error al cambiar contraseña: {auth_e}")
+               
+        else:
+            print("DEBUG:  Se omitió el cambio de contraseña (el campo estaba vacío o es None).")
+
+        # 2. Actualizar Rol en Firestore
+        if self.db:
+            try:
+                doc_ref = self.db.collection('empleados').document(uid)
+                doc_ref.update({'rol': rol})
+                print(f"DEBUG: ¡Éxito! Rol actualizado a {rol} para el documento {uid}")
+            except Exception as e:
+                raise Exception(f"Error actualizando rol en Firestore: {e}")
