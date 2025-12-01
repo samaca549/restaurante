@@ -23,6 +23,47 @@ Control total sobre los insumos del restaurante.
 <img width="1920" height="590" alt="{89DF2C36-524A-44F5-8753-967A1391FD37}" src="https://github.com/user-attachments/assets/8a4bf79a-a72b-4f07-b0c9-0a999940db92" />
 <img width="1856" height="924" alt="{33962313-BBD4-44FF-9F17-C2E20C9A3BAA}" src="https://github.com/user-attachments/assets/5aa0e0d9-542d-4d8e-b2bc-bd0b44822b8d" />
 <img width="1920" height="1002" alt="{1BB9B261-9F10-482A-A4D4-5909874DB352}" src="https://github.com/user-attachments/assets/e6288a51-9487-407d-a892-c0fbfae41ff0" />
+## 🛠️ Tecnologías Utilizadas
+
+* **Lenguaje:** Python 3.x
+* **Interfaz Gráfica (GUI):** Tkinter (con estilos `ttk` personalizados).
+* **Base de Datos:** Google Cloud Firestore (NoSQL).
+* **Inteligencia Artificial:** Google Generative AI (`gemini-2.0-flash`).
+* **Gráficos:** Matplotlib.
+* **Manejo de Imágenes:** Pillow (PIL).
+* **Arquitectura:** MVVM (Separación lógica entre UI, Lógica de Negocio y Datos).
+
+---
+
+## ⚙️ Instalación y Configuración
+
+1.  **Clonar el repositorio:**
+    ```bash
+    git clone [https://github.com/tu-usuario/restaurante-ai.git](https://github.com/tu-usuario/restaurante-ai.git)
+    cd restaurante-ai
+    ```
+
+2.  **Crear entorno virtual (recomendado):**
+    ```bash
+    python -m venv venv
+    source venv/bin/activate  # En Windows: venv\Scripts\activate
+    ```
+
+3.  **Instalar dependencias:**
+    ```bash
+    pip install -r requirements.txt
+    ```
+    *(Asegúrate de incluir: `google-generativeai`, `firebase-admin`, `matplotlib`, `pillow`)*
+
+4.  **Configurar Variables de Entorno:**
+    Crea un archivo `.env` o configura en tu sistema:
+    * `GEMINI_API_KEY`: Tu API Key de Google AI Studio.
+    * `GOOGLE_APPLICATION_CREDENTIALS`: Ruta a tu archivo JSON de Firebase.
+
+5.  **Ejecutar la aplicación:**
+    ```bash
+    python main.py
+    ```
 <img width="1266" height="419" alt="{290ED901-31BE-49CB-8A4F-4B5D21A70ACE}" src="https://github.com/user-attachments/assets/42bff0da-ed91-49bd-96e2-86f55b41975d" />
 <img width="1920" height="891" alt="{EF9F7F1A-A0D3-4B77-AC66-EC200FB43A7B}" src="https://github.com/user-attachments/assets/75bdc024-2f49-4559-bba5-2062a69769bb" />
 ### 3. 📈 Dashboard Financiero (Analytics)
