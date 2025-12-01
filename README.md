@@ -2,6 +2,18 @@
 
 Este proyecto es una aplicación de escritorio desarrollada en Python utilizando el patrón de arquitectura **MVVM (Model-View-ViewModel)**. No solo permite gestionar pedidos e inventarios, sino que integra un **"Cerebro Digital"** que analiza datos en tiempo real para sugerir estrategias de venta, alertar sobre quiebres de stock críticos y responder consultas financieras complejas.
 <img width="1213" height="912" alt="{08427FD0-652A-4796-8786-C33D280EEA8B}" src="https://github.com/user-attachments/assets/3d3e52fd-99c7-429a-9c2e-cc8522c3b367" />
+1. Seguridad y Gestión de Roles
+El sistema inicia con una ventana de **Login** validada contra base de datos, dirigiendo al usuario a su interfaz correspondiente:
+
+* **👨‍💼 Perfil Gerente (Admin):**
+    * **Visión Total:** Acceso irrestricto a todos los módulos.
+    * **Toma de Decisiones:** Único rol con acceso al *Dashboard Financiero* y al *Chatbot con IA* para estrategias de negocio.
+    * **Control de Stock:** Capacidad para auditar y modificar el inventario.
+
+* **💁‍♂️ Perfil Mesero (Operativo):**
+    * **Interfaz Focalizada:** Acceso exclusivo al módulo de *Pedidos*.
+    * **Seguridad:** Bloqueo de funciones críticas (Finanzas/Inventario) para evitar errores o manipulaciones no autorizadas.
+    * **UX Ágil:** Diseño simplificado para máxima velocidad en la toma de órdenes.
 <img width="1273" height="715" alt="{414411C8-818D-45AD-B6D8-5AF83B8FFE9D}" src="https://github.com/user-attachments/assets/ee9526e8-a516-43df-a6d6-7eb9b9d06192" />
 <img width="1265" height="945" alt="{E6D4EBE9-E421-424D-9AFA-CD87F3979684}" src="https://github.com/user-attachments/assets/275bf0a2-4d93-43d5-819e-3ad9ef9ecbff" />
 ### 1. 🍔 Módulo de Pedidos (Punto de Venta)
@@ -77,3 +89,10 @@ Un centro de control para la salud económica del negocio.
 
 ---
 <img width="1901" height="680" alt="{0848ABE6-8D54-4169-AB9F-7F23D1AEE264}" src="https://github.com/user-attachments/assets/3263e0f2-d37f-4c3c-ac28-84c6c90065e9" />
+## 🧠 Integración con IA (Prompts Destacados)
+
+El sistema utiliza **Gemini 2.0 Flash** por su velocidad y bajo costo. Algunos de los roles que asume la IA son:
+
+* **Expert en Neuromarketing:** *"Elige el plato que genere más deseo impulsivo y crea una frase sensorial..."*
+* **Jefe de Logística:** *"Identifica el insumo MÁS crítico... ten cuidado con las UNIDADES (Kg vs Unid)..."*
+* **Gerente Comercial:** *"Dame una estrategia de guerrilla marketing para duplicar estas ventas HOY."*
