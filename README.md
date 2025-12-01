@@ -4,12 +4,20 @@ Este proyecto es una aplicación de escritorio desarrollada en Python utilizando
 <img width="1213" height="912" alt="{08427FD0-652A-4796-8786-C33D280EEA8B}" src="https://github.com/user-attachments/assets/3d3e52fd-99c7-429a-9c2e-cc8522c3b367" />
 <img width="1273" height="715" alt="{414411C8-818D-45AD-B6D8-5AF83B8FFE9D}" src="https://github.com/user-attachments/assets/ee9526e8-a516-43df-a6d6-7eb9b9d06192" />
 <img width="1265" height="945" alt="{E6D4EBE9-E421-424D-9AFA-CD87F3979684}" src="https://github.com/user-attachments/assets/275bf0a2-4d93-43d5-819e-3ad9ef9ecbff" />
-<img width="1912" height="1019" alt="{BD04505F-9A6D-4272-9B55-F5E1E889AD69}" src="https://github.com/user-attachments/assets/939f5f90-ab14-4ec0-9fe6-d41e415afa92" />
 ### 1. 🍔 Módulo de Pedidos (Punto de Venta)
 Una interfaz visual e intuitiva para la toma de pedidos.
 * **Menú Visual:** Tarjetas de productos con imágenes y control de cantidad (+/-).
 * **Neuromarketing con IA:** Un widget inteligente analiza el menú y sugiere una "Promo Flash" con frases persuasivas generadas por IA para impulsar la venta de productos específicos.
 * **Carrito en Tiempo Real:** Cálculo automático de totales y visualización detallada del ticket.
+<img width="1912" height="1019" alt="{BD04505F-9A6D-4272-9B55-F5E1E889AD69}" src="https://github.com/user-attachments/assets/939f5f90-ab14-4ec0-9fe6-d41e415afa92" />
+* ### 2. 📦 Gestión de Inventario Inteligente
+Control total sobre los insumos del restaurante.
+* **CRUD Completo:** Crear, leer y actualizar stock de insumos.
+* **Búsqueda y Filtrado:** Barra de búsqueda en tiempo real.
+* **Auditoría de Stock con IA:**
+    * Detecta niveles críticos basándose en benchmarks gastronómicos (ej. diferencia entre Kilos y Unidades).
+    * Genera alertas de "Pánico" si un insumo vital (como la carne o el pan) está por agotarse.
+    * Compara productos nuevos con estándares de la industria automáticamente.
 <img width="1852" height="1015" alt="{28696FC5-067A-403E-8288-FCDA2FA62928}" src="https://github.com/user-attachments/assets/84600212-fc90-498d-8363-88cc94140874" />
 <img width="1520" height="867" alt="{E2DEB44F-C057-4728-911E-BB1127B2DEED}" src="https://github.com/user-attachments/assets/3b54969c-6984-4ddd-8914-c5a9497d67ef" />
 <img width="1920" height="590" alt="{89DF2C36-524A-44F5-8753-967A1391FD37}" src="https://github.com/user-attachments/assets/8a4bf79a-a72b-4f07-b0c9-0a999940db92" />
