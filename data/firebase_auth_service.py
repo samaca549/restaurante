@@ -38,12 +38,12 @@ class AuthService:
             local_id = data["localId"] # UID de Auth
             id_token = data["idToken"]
 
-            # 2. OBTENER ROL DESDE FIRESTORE (Tu colección 'empleados')
+            # 2. OBTENER ROL DESDE FIRESTORE 
             rol = 'mesero' # Default
             
             if self.db:
                 print(f"DEBUG: Buscando en Firestore email: {email}")
-                # Buscamos el documento donde el campo 'email' coincida
+         
                 users_ref = self.db.collection('empleados')
                 query = users_ref.where('email', '==', email).limit(1).stream()
                 
