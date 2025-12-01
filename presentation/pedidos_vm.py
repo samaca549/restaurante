@@ -5,8 +5,7 @@ from presentation.observable import Observable
 class PedidosViewModel:
     def __init__(self, firestore_service, ia_service):
         self.db = firestore_service
-        # Nota: ia_service se inyecta por compatibilidad aunque la Vista lo use directo del controller,
-        # pero es buena práctica tenerlo aquí si quisieras mover la lógica al VM en el futuro.
+
         self.ia = ia_service 
         
         self.pedido_actual = Observable(None) 
