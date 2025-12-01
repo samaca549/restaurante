@@ -19,7 +19,7 @@ class FinanzasViewModel:
         self.gemini_respuesta = Observable("Esperando consulta...")
         self.insight_flash = Observable(None) 
 
-    # --- Método principal llamado por la Vista ---
+    
     def generar_reporte_completo(self, periodo="Mes Actual"):
         """Genera KPIs, Datos de Gráficos y Tabla de Transacciones"""
         self.mensaje.value = f"Analizando datos ({periodo})..."
