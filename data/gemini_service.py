@@ -1,7 +1,7 @@
 import os
 import sys
 
-# --- IMPORTACIÓN SEGURA DE LA LIBRERÍA ---
+
 try:
     import google.generativeai as genai
     from google.generativeai.types import GenerationConfig
@@ -10,7 +10,7 @@ except ImportError:
     genai = None
     GenerationConfig = None
 
-# Asumiendo que esta es una clase disponible
+
 from data.firestore_service import FirestoreService
 
 class GeminiService:
@@ -44,7 +44,7 @@ class GeminiService:
             return "Servicio de IA no disponible (Verifica tu API KEY)."
 
         try:
-            # Llamada a la API con configuración para respuestas más creativas pero precisas
+            # Llamada a la API 
             config = GenerationConfig(temperature=0.7)
             response = self.model.generate_content(prompt, generation_config=config)
             
@@ -52,17 +52,17 @@ class GeminiService:
             if response and response.text:
                 return response.text.strip()
             
-            # Manejo de casos de bloqueo (si fuera necesario)
+            # Manejo de casos 
             if response and response.prompt_feedback and response.prompt_feedback.block_reason:
                 return f"La respuesta fue bloqueada por seguridad: {response.prompt_feedback.block_reason.name}"
                 
             return "La IA no generó una respuesta de texto."
         except Exception as e:
-            # Se imprime el error completo para depuración, pero se devuelve un mensaje genérico
+            # Se imprime el error completo
             print(f" Error en generación: {e}")
             return "Ocurrió un error al consultar a la IA."
 
-    # --- Se omiten los métodos de datos (1. y 1.5) ya que no requieren cambios ---
+
     def _obtener_datos_conteo_platos(self):
         """Procesa pedidos para obtener estadísticas simples."""
         try:
@@ -141,7 +141,6 @@ class GeminiService:
 
         nombres = ", ".join([p.nombre for p in lista_platos])
 
-        # Se mejora el prompt para ser más directo con el formato
         prompt = f"""
         Eres un experto en Neuromarketing Gastronómico.
         Menú disponible: [{nombres}].
@@ -156,16 +155,14 @@ class GeminiService:
 
         res = self._generar_respuesta(prompt)
 
-        # Se asegura que la respuesta devuelta a la UI sea limpia y en el formato esperado
+
         if "|" in res:
             try:
                 # Separar solo una vez para evitar problemas si la frase tiene un '|'
                 n, f = res.split("|", 1) 
                 return n.strip(), f.strip()
             except ValueError: 
-                pass # Si falla el split, se usa el manejo por defecto
-
-        # Manejo por defecto/fallback si la IA no sigue el formato
+                pass 
         nombre_default = lista_platos[0].nombre if lista_platos else "Plato"
         # Devuelve el texto generado como frase, eliminando cualquier | residual
         return nombre_default, res.replace("|", " ") 
