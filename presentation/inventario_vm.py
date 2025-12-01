@@ -31,13 +31,13 @@ class InventarioViewModel:
     def crear_nuevo_item(self, nombre, cantidad, unidad):
         try:
             cant_float = float(cantidad)
-            # Creamos objeto temporal (el ID se generará en BD)
+            
             nuevo_item = InventarioItem(id=None, nombre=nombre, cantidad=cant_float, unidad=unidad)
             
             # Guardar en BD
             self.db.add_inventario_item(nuevo_item)
             
-            self.mensaje.value = f"✅ Ítem '{nombre}' agregado correctamente."
+            self.mensaje.value = f" Ítem '{nombre}' agregado correctamente."
             self.cargar_inventario() # Recargar lista visual
         except ValueError:
             self.mensaje.value = "Error: La cantidad debe ser numérica."
@@ -46,10 +46,10 @@ class InventarioViewModel:
 
     def actualizar_stock(self, item: InventarioItem, nueva_cantidad: float):
         try:
-            # Actualizamos en BD
+            
             self.db.update_inventario_cantidad(item.id, nueva_cantidad)
             
-            self.mensaje.value = f"🔄 Stock de '{item.nombre}' actualizado a {nueva_cantidad}."
+            self.mensaje.value = f" Stock de '{item.nombre}' actualizado a {nueva_cantidad}."
             self.cargar_inventario()
         except Exception as e:
             self.mensaje.value = f"Error al actualizar: {e}"
