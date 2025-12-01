@@ -1,6 +1,6 @@
 ## 📋 Descripción General
 
-Este proyecto es una aplicación de escritorio desarrollada en Python utilizando el patrón de arquitectura **MVVM (Model-View-ViewModel)**. No solo permite gestionar pedidos e inventarios, sino que integra un **"Cerebro Digital"** que analiza datos en tiempo real para sugerir estrategias de venta, alertar sobre quiebres de stock críticos y responder consultas financieras complejas.
+Este proyecto es una aplicación de escritorio desarrollada en Python utilizando un patrón de arquitectura (presentaion_domain_ui_data). No solo permite gestionar pedidos e inventarios, sino que integra un **"Cerebro Digital"** que analiza datos en tiempo real para sugerir estrategias de venta, alertar sobre quiebres de stock críticos y responder consultas financieras complejas.
 <img width="1213" height="912" alt="{08427FD0-652A-4796-8786-C33D280EEA8B}" src="https://github.com/user-attachments/assets/3d3e52fd-99c7-429a-9c2e-cc8522c3b367" />
 1. Seguridad y Gestión de Roles
 El sistema inicia con una ventana de **Login** validada contra base de datos, dirigiendo al usuario a su interfaz correspondiente:
