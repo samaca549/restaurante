@@ -73,17 +73,16 @@ class HomeView(tk.Frame):
         for i, (texto, vista, color, icon) in enumerate(botones):
             row, col = divmod(i, 3) # 3 columnas
             
-            # Marco del botón (Frame)
+       
             f_btn = tk.Frame(self.container_menu, bg="white", bd=0, cursor="hand2", highlightbackground="#ddd", highlightthickness=1)
             f_btn.grid(row=row, column=col, padx=15, pady=15, sticky="nsew")
             
-            # Evento click en todo el cuadro
+       
             f_btn.bind("<Button-1>", lambda e, v=vista: self.controller.show_frame(v))
             
             tk.Label(f_btn, text=icon, font=("Segoe UI Emoji", 40), bg="white", fg=color).pack(pady=(25, 10))
             tk.Label(f_btn, text=texto, font=("Segoe UI", 12, "bold"), bg="white", fg="#333").pack(pady=(0, 25))
-            
-            # Propagar el click a los hijos (labels)
+         
             for child in f_btn.winfo_children():
                 child.bind("<Button-1>", lambda e, v=vista: self.controller.show_frame(v))
 
