@@ -46,7 +46,7 @@ class InsightWidget(tk.Frame):
         
         f_head = tk.Frame(f_in, bg="#311B92")
         f_head.pack(fill="x")
-        tk.Label(f_head, text="🧠 IA STRATEGIC INSIGHT", fg="#B388FF", bg="#311B92", font=("Segoe UI", 9, "bold")).pack(side="left")
+        tk.Label(f_head, text=" IA STRATEGIC INSIGHT", fg="#B388FF", bg="#311B92", font=("Segoe UI", 9, "bold")).pack(side="left")
         
         self.lbl_icon = tk.Label(f_in, text="💡", font=("Segoe UI Emoji", 28), bg="#311B92", fg="white")
         self.lbl_icon.pack(side="left", padx=(0, 15))
@@ -296,7 +296,7 @@ class FinanzasView(ttk.Frame):
             self.ent_prompt.delete(0, 'end')
             
             # Feedback visual
-            self.lbl_ia_status.config(text="IA pensando... 🧠")
+            self.lbl_ia_status.config(text="IA pensando... ")
             self.btn_send.config(state="disabled")
             
             self.vm.ask_gemini_question(prompt)
