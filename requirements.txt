@@ -1,0 +1,10 @@
+# LIBRERIAS DE UI/VISUALIZACION
+tkinter
+matplotlib
+Pillow
+
+# LIBRERIAS DE IA Y CLOUD
+google-generativeai
+firebase-admin
+python-dotenv
+requests
