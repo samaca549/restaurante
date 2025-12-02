@@ -96,3 +96,4 @@ El sistema utiliza **Gemini 2.0 Flash** por su velocidad y bajo costo. Algunos d
 * **Expert en Neuromarketing:** *"Elige el plato que genere más deseo impulsivo y crea una frase sensorial..."*
 * **Jefe de Logística:** *"Identifica el insumo MÁS crítico... ten cuidado con las UNIDADES (Kg vs Unid)..."*
 * **Gerente Comercial:** *"Dame una estrategia de guerrilla marketing para duplicar estas ventas HOY."*
+pip install -r requirements.txt
