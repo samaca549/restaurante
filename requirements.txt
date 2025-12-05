@@ -1,5 +1,5 @@
 # LIBRERIAS DE UI/VISUALIZACION
-tkinter
+
 matplotlib
 Pillow
 
