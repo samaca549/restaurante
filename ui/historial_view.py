@@ -7,7 +7,7 @@ class HistorialPedidosView(ttk.Frame):
         self.controller = controller
         self.vm = controller.get_vm("historial_vm") 
         
-        ttk.Label(self, text="📜 Historial de Pedidos", font=("Segoe UI", 20, "bold")).pack(pady=10)
+        ttk.Label(self, text=" Historial de Pedidos", font=("Segoe UI", 20, "bold")).pack(pady=10)
 
         f_nav = ttk.Frame(self)
         f_nav.pack(fill="x", padx=10)
