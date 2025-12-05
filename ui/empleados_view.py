@@ -31,7 +31,7 @@ class EmpleadosView(ttk.Frame):
         f_nav.pack(fill="x", padx=10)
         ttk.Button(f_nav, text="< Volver al Menú", 
                    command=lambda: controller.show_frame("HomeView")).pack(side="left")
-        ttk.Button(f_nav, text="🔄 Recargar", command=self.vm.cargar_empleados).pack(side="right")
+        ttk.Button(f_nav, text=" Recargar", command=self.vm.cargar_empleados).pack(side="right")
 
         # --- Lista de Empleados ---
         f_list = ttk.LabelFrame(self, text="Lista de Empleados", padding=10)
